@@ -1,20 +1,21 @@
-from korean_verb_tool.audio import AudioCreator
-from korean_verb_tool.config import settings
 import json
 
+from korean_verb_tool.audio import AudioCreator
+from korean_verb_tool.config import settings
+
 if __name__ == "__main__":
-    with open(settings.mp3_path / "output_word_list.csv", "r") as f:
+    with open(settings.mp3_path / "output_word_list.csv") as f:
         inut_text_list = f.read()
     inut_text_list = inut_text_list.split("\n")
 
-    with open(settings.mp3_path / "word_list.csv", "r") as f:
+    with open(settings.mp3_path / "word_list.csv") as f:
         word_list = f.read()
     word_list = word_list.split("\n")
 
     ausdio_creator = AudioCreator()
 
     data_list = []
-    for input_text, word in zip(inut_text_list, word_list):
+    for input_text, word in zip(inut_text_list, word_list, strict=False):
         # print(input_text, word)
         response = ausdio_creator.create_audio(input_text)
         mp3_filename = str(response.name)
