@@ -1,17 +1,31 @@
+import json
 import streamlit as st
 
 from korean_verb_tool.config import settings
 
+
+# Open and read the JSON file
+with open("../data/test.json", "r", encoding="utf-8") as json_file:
+    data = json.load(json_file)
+
+
+def mp3_player(text: str, mp3_filename):
+    # MP3 file to play
+    audio_file_path = settings.mp3_path / mp3_filename
+
+    # Load and play the audio file
+    with open(audio_file_path, "rb") as audio_file:
+        audio_bytes = audio_file.read()
+
+    st.text(text)
+    st.audio(audio_bytes, format="audio/mp3")
+
+
 # Set the title
 st.title("Simple MP3 Player")
 
-# MP3 file to play
-audio_file_path = settings.mp3_path / "naver_7e9d0030-dc34-4924-9080-60f14c2d23e5.mp3"  # Path to your MP3 file
-
-# Load and play the audio file
-with open(audio_file_path, "rb") as audio_file:
-    audio_bytes = audio_file.read()
-
 # Streamlit's audio player
-st.text("듣다")
-st.audio(audio_bytes, format="audio/mp3")
+for item in data["data"]:
+    word = item["word"]
+    mp3_filename = item["mp3"]
+    mp3_player(word, mp3_filename)
