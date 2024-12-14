@@ -6,7 +6,7 @@ import streamlit as st
 from korean_verb_tool.config import settings
 
 # Open and read the JSON file
-with Path("../data/test.json").open(encoding="utf-8") as json_file:
+with (settings.mp3_path / "test.json").open(encoding="utf-8") as json_file:
     data = json.load(json_file)
 
 
