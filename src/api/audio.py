@@ -3,7 +3,7 @@ from pathlib import Path
 
 from navertts import NaverTTS
 
-from korean_verb_tool.config import settings
+from api.config import settings
 
 
 class AudioCreator:

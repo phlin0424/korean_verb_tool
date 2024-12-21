@@ -5,7 +5,7 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 from pydantic_settings import BaseSettings
 
-from korean_verb_tool.models import InputLang, TranslatedLang
+from api.models import InputLang, TranslatedLang
 
 DIR_PATH = Path(__file__).resolve().parent.parent
 MP3_PATH = DIR_PATH / "data"
