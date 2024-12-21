@@ -3,10 +3,12 @@ from pathlib import Path
 
 import streamlit as st
 
-from korean_verb_tool.config import settings
-
 # Open and read the JSON file
-with (settings.mp3_path / "test.json").open(encoding="utf-8") as json_file:
+# TODO: need to be replaced into a artifact data storage
+DIR_PATH = Path(__file__).resolve().parent.parent
+mp3_path = DIR_PATH / "data"
+
+with (mp3_path / "test.json").open(encoding="utf-8") as json_file:
     data = json.load(json_file)
 
 
@@ -18,7 +20,7 @@ def mp3_player(text: str, mp3_filename: Path) -> None:
         mp3_filename (Path): _description_
     """
     # MP3 file to play
-    audio_file_path = settings.mp3_path / mp3_filename
+    audio_file_path = mp3_path / mp3_filename
 
     # Load and play the audio file
     with audio_file_path.open("rb") as audio_file:
