@@ -96,4 +96,7 @@ test.ipynb
 # Exclude the adhoc notebooks
 notebooks
 
+# Migration versions
+migrations/versions
+
 
