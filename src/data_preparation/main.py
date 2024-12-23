@@ -1,23 +1,24 @@
 import json
-
 from korean_verb_tool.audio import AudioCreator
 from korean_verb_tool.config import settings
 
 if __name__ == "__main__":
-    with open(settings.mp3_path / "output_word_list.csv") as f:
-        inut_text_list = f.read()
-    inut_text_list = inut_text_list.split("\n")
+    tts_input_csv = settings.mp3_path / "output_word_list.csv"
+    with tts_input_csv.open() as f:
+        input_text_list = f.read()
+    input_text_list = input_text_list.split("\n")
 
-    with open(settings.mp3_path / "word_list.csv") as f:
+    verb_origin_csv = settings.mp3_path / "word_list.csv"
+    with verb_origin_csv.open() as f:
         word_list = f.read()
     word_list = word_list.split("\n")
 
-    ausdio_creator = AudioCreator()
+    audio_creator = AudioCreator()
 
     data_list = []
-    for input_text, word in zip(inut_text_list, word_list, strict=False):
+    for input_text, word in zip(input_text_list, word_list, strict=False):
         # print(input_text, word)
-        response = ausdio_creator.create_audio(input_text)
+        response = audio_creator.create_audio(input_text)
         mp3_filename = str(response.name)
         data_list.append(
             {
@@ -30,5 +31,5 @@ if __name__ == "__main__":
     data = {"data": data_list}
 
     file_path = settings.mp3_path / "test.json"
-    with open(file_path, "w", encoding="utf-8") as json_file:
+    with file_path.open("w", encoding="utf-8") as json_file:
         json.dump(data, json_file, indent=4, ensure_ascii=False)  # 'indent=4' makes the JSON human-readable
