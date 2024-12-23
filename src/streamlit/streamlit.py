@@ -4,7 +4,7 @@ from pathlib import Path
 import streamlit as st
 
 # Open and read the JSON file
-# TODO: need to be replaced into a artifact data storage
+# TODO(PH Lin): need to be replaced into a artifact data storage
 DIR_PATH = Path(__file__).resolve().parent.parent
 mp3_path = DIR_PATH / "data"
 
