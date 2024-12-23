@@ -12,6 +12,7 @@ dependencies = [
     "navertts>=0.3.1",
     "pydantic-settings>=2.6.1",
     "pydantic>=2.10.3",
+    "sqlalchemy>=2.0.36",
     "streamlit>=1.41.0",
 ]
 
@@ -21,6 +22,7 @@ build-backend = "hatchling.build"
 
 [tool.uv]
 dev-dependencies = [
+    "alembic>=1.14.0",
     "ipykernel>=6.29.5",
     "jupyterlab>=4.2.5",
     "poethepoet>=0.28.0",
