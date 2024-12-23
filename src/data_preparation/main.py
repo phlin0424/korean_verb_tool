@@ -1,6 +1,6 @@
 import json
 
-from korean_verb_tool.audio import AudioCreator
+from korean_verb_tool.utils.audio import AudioCreator
 from korean_verb_tool.config import settings
 
 if __name__ == "__main__":
