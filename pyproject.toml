@@ -8,6 +8,7 @@ packages = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "asyncpg>=0.30.0",
     "fastapi>=0.115.6",
     "navertts>=0.3.1",
     "psycopg2-binary==2.9.9",
@@ -24,6 +25,7 @@ build-backend = "hatchling.build"
 [tool.uv]
 dev-dependencies = [
     "alembic>=1.14.0",
+    "greenlet>=3.1.1",
     "ipykernel>=6.29.5",
     "jupyterlab>=4.2.5",
     "poethepoet>=0.28.0",
