@@ -37,13 +37,20 @@ class Config(BaseSettings):
         description="Namespace UUID for deterministic filename generation.",
     )
 
-    db_host: str
-    postgres_user: str
-    postgres_password: str
-    postgres_db: str
+    db_host: str = Field(description="Host for PostgreSQL DB.")
+    postgres_user: str = Field(description="PostgreSQL DB username.")
+    postgres_password: str = Field(description="PostgreSQL DB password. ")
+    postgres_db: str = Field(description="PostgreSQL DB name.")
+    aws_access_key_id: str = Field(description="Access key to connect to AWS")
+    aws_secret_access_key: str = Field(description="Secret key to connect to AWS")
 
     @property
     def postgres_local_url(self) -> str:
+        """Postgres db local url.
+
+        Returns:
+            str: _description_
+        """
         return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@localhost/{self.postgres_db}"
 
     model_config = SettingsConfigDict(
