@@ -2,10 +2,10 @@ import uuid
 from pathlib import Path
 from uuid import UUID
 
-from pydantic import ConfigDict, Field
-from pydantic_settings import BaseSettings
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from korean_verb_tool.models import InputLang, TranslatedLang
+from korean_verb_tool.schemas.models import InputLang, TranslatedLang
 
 DIR_PATH = Path(__file__).resolve().parent.parent
 MP3_PATH = DIR_PATH / "data"
@@ -37,7 +37,19 @@ class Config(BaseSettings):
         description="Namespace UUID for deterministic filename generation.",
     )
 
-    model_config = ConfigDict(protected_namespaces=("settings_",))
+    db_host: str
+    postgres_user: str
+    postgres_password: str
+    postgres_db: str
+
+    @property
+    def postgres_local_url(self) -> str:
+        return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@localhost/{self.postgres_db}"
+
+    model_config = SettingsConfigDict(
+        env_file=DIR_PATH / ".env",
+        env_file_encoding="utf-8",
+    )
 
 
 settings = Config()

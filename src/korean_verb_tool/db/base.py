@@ -31,7 +31,7 @@ class KoreanVerbTable(Base):
         nullable=False,
         comment="Unique UUID for Korean verb",
     )
-    variances = relationship("KoreanVerbVarianceBaseTable", back_populates="verb")
+    variances = relationship("KoreanVerbVarianceNegativeTable", back_populates="verb")
 
 
 class KoreanVerbVarianceBaseTable(Base):

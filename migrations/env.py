@@ -3,7 +3,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from data_preparation.data_models import Base
+from korean_verb_tool.db.base import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
