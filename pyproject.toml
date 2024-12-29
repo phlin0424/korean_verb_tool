@@ -12,6 +12,7 @@ dependencies = [
     "fastapi>=0.115.6",
     "navertts>=0.3.1",
     "psycopg2-binary==2.9.9",
+    "pydantic-ai>=0.0.15",
     "pydantic-settings>=2.6.1",
     "pydantic>=2.10.3",
     "sqlalchemy>=2.0.36",
