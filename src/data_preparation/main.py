@@ -1,7 +1,7 @@
 import json
 
-from korean_verb_tool.utils.audio import AudioCreator
 from korean_verb_tool.config import settings
+from korean_verb_tool.utils.audio import AudioCreator
 
 if __name__ == "__main__":
     tts_input_csv = settings.mp3_path / "output_word_list.csv"

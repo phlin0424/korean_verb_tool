@@ -2,7 +2,7 @@ import uuid
 
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, declarative_base, mapped_column, declared_attr, relationship
+from sqlalchemy.orm import Mapped, declarative_base, declared_attr, mapped_column, relationship
 
 Base = declarative_base()
 

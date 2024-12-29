@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from korean_verb_tool.config import settings
 
+from korean_verb_tool.config import settings
 
 # Database setup
 DATABASE_URL = settings.postgres_local_url
@@ -17,7 +17,11 @@ AsyncSessionLocal = sessionmaker(
 )
 
 
-# Dependency for FastAPI routes
 async def get_db():
+    """Dependency for FastAPI routes. Session generator.
+
+    Yields:
+        _type_: _description_
+    """
     async with AsyncSessionLocal() as session:
         yield session
