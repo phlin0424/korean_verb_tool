@@ -43,6 +43,8 @@ class Config(BaseSettings):
     postgres_db: str = Field(description="PostgreSQL DB name.")
     aws_access_key_id: str = Field(description="Access key to connect to AWS")
     aws_secret_access_key: str = Field(description="Secret key to connect to AWS")
+    openai_api_key: str = Field(description="Open AI API key.")
+    gemini_api_key: str = Field(description="Gemini API key.")
 
     @property
     def postgres_local_url(self) -> str:
