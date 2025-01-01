@@ -37,6 +37,7 @@ class Config(BaseSettings):
         description="Namespace UUID for deterministic filename generation.",
     )
 
+    AI_model: str = Field(default="gemini-1.5-flash", description="LLM name.")
     db_host: str = Field(description="Host for PostgreSQL DB.")
     postgres_user: str = Field(description="PostgreSQL DB username.")
     postgres_password: str = Field(description="PostgreSQL DB password. ")
