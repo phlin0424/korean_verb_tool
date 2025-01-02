@@ -1,11 +1,15 @@
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.declarative import DeclarativeMeta
 from korean_verb_tool.db.base import KoreanVerbTable, KoreanVerbVarianceBaseTable
 
 
-async def create_korean_verb(db: AsyncSession, korean_verb: str) -> KoreanVerbTable:
+async def create_korean_verb(
+    db: AsyncSession,
+    korean_verb: str,
+) -> KoreanVerbTable:
     """Inserting rows to KoreanVerbTable.
 
     Args:
@@ -22,48 +26,100 @@ async def create_korean_verb(db: AsyncSession, korean_verb: str) -> KoreanVerbTa
     return new_verb
 
 
-async def create_row(db: AsyncSession, table_model, **kwargs) -> KoreanVerbTable | KoreanVerbVarianceBaseTable:
-    """Generic function to insert a row into a table.
+async def create_korean_variance(
+    db: AsyncSession,
+    table_model: type[DeclarativeMeta],
+    korean_variance: str,
+    relationship_table: KoreanVerbTable,
+) -> KoreanVerbTable | KoreanVerbVarianceBaseTable:
+    """Generic function to insert a row into a korean variance table.
 
     Args:
-        db (AsyncSession): The database session.
-        table_model (_type_): The SQLAlchemy ORM table model class.
-        **kwargs: Column values to be inserted as keyword arguments.
+        db (AsyncSession): _description_
+        table_model (type[DeclarativeMeta]): _description_
+        korean_variance (str): _description_
+        relationship_table (KoreanVerbTable): _description_
 
-    Raises:
-        e: The newly created row object.
+    Returns:
+        KoreanVerbTable | KoreanVerbVarianceBaseTable: _description_
     """
     try:
         # Create a row using the predefined table model
-        new_row = table_model(**kwargs)
+        new_row = table_model(
+            korean_verb_variance_negative=korean_variance,
+            verb=relationship_table,
+        )
         db.add(new_row)
         await db.commit()
         await db.refresh(new_row)
-    except SQLAlchemyError as e:
+    except SQLAlchemyError:
         await db.rollback()
-        raise e
+        raise
 
     # Return the created table model, which is row has been inserted.
     return new_row
 
 
-async def get_korean_verb_by_id(db: AsyncSession, verb_id: int) -> str:
-    """Return korean verb by a given id from KoreanVerbTable.
+async def get_row_by_verb(
+    db: AsyncSession,
+    korean_verb: str,
+) -> str:
+    """Retrieve the UUID of a Korean verb from the table.
 
     Args:
-        db (AsyncSession): _description_
-        verb_id (int): _description_
+        db (AsyncSession): The database session.
+        table_model: The SQLAlchemy ORM table model class.
+        korean_verb (str): The Korean verb to look up.
 
     Returns:
-        _type_: _description_
+        UUID: The UUID of the matching row, or None if not found.
     """
-    # Create a select statement
-    stmt = select(KoreanVerbTable).filter(KoreanVerbTable.id == verb_id)
-
-    # Execute the query
+    # Create a select query
+    stmt = select(KoreanVerbTable.korean_verb_uuid).filter_by(korean_verb=korean_verb)
     result = await db.execute(stmt)
 
-    # Fetch the first matching result
-    korean_verb = result.scalars().first()
+    # Fetch the UUID from the result
+    uuid = result.scalars().first()
 
-    return korean_verb.korean_verb
+
+async def update_row(
+    db: AsyncSession,
+    table_model: type[DeclarativeMeta],
+    korean_verb: str,
+    **kwargs,
+) -> type[DeclarativeMeta]:
+    """Update a row in a table by korean verb.
+
+    Args:
+        db (AsyncSession): The database session.
+        table_model: The SQLAlchemy ORM table model class.
+        row_id (int): The ID of the row to update.
+        **kwargs: Column values to update (as key-value pairs).
+
+    Returns:
+        object: The updated row object, or None if the row does not exist.
+    """
+    try:
+        # Fetch the row to be updated
+        stmt = select(table_model).filter_by(korean_verb=korean_verb)
+        result = await db.execute(stmt)
+        row = result.scalars().first()
+
+        if not row:
+            return None  # Row does not exist
+
+        # Update the fields dynamically
+        for key, value in kwargs.items():
+            if hasattr(row, key):
+                setattr(row, key, value)
+            else:
+                raise ValueError(f"Column '{key}' does not exist in {table_model.__name__}.")
+
+        # Commit the changes
+        await db.commit()
+        await db.refresh(row)  # Refresh to get the updated values
+        return row
+
+    except SQLAlchemyError as e:
+        await db.rollback()
+        raise e
