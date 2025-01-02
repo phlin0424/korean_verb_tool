@@ -1,11 +1,11 @@
 import uuid
-from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import DeclarativeMeta
-from korean_verb_tool.db.base import KoreanVerbTable
+
 from korean_verb_tool.config import settings
+from korean_verb_tool.db.base import KoreanVerbTable
 
 
 async def create_korean_verb(
