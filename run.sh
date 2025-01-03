@@ -1,1 +1,1 @@
-uv run streamlit run src/korean_verb_tool/app.py
+uv run streamlit run src/streamlit/streamlit.py
