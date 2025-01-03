@@ -1,11 +1,12 @@
 import uuid
 
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
 from korean_verb_tool.config import settings
-from korean_verb_tool.db.base import KoreanVerbTable
+from korean_verb_tool.db.base import KoreanVerbTable, KoreanVerbVarianceBaseTable
 
 
 async def create_korean_verb(
@@ -68,27 +69,33 @@ async def create_korean_variance(
     return new_row
 
 
-# async def get_row_by_verb(
-#     db: AsyncSession,
-#     korean_verb: str,
-#     table_model: type[DeclarativeMeta],
-# ) -> str:
-#     """Retrieve the UUID of a Korean verb from the table.
+async def get_row_by_verb(
+    db: AsyncSession,
+    korean_verb: str,
+    table_model: KoreanVerbVarianceBaseTable,
+) -> str:
+    """Retrieve the variances of a Korean verb from the table.
 
-#     Args:
-#         db (AsyncSession): The database session.
-#         table_model: The SQLAlchemy ORM table model class.
-#         korean_verb (str): The Korean verb to look up.
+    Args:
+        db (AsyncSession): The database session.
+        table_model: The SQLAlchemy ORM table model class.
+        korean_verb (str): The Korean verb to look up.
 
-#     Returns:
-#         UUID: The UUID of the matching row, or None if not found.
-#     """
-#     # Create a select query
-#     stmt = select(KoreanVerbTable.korean_verb_uuid).filter_by(korean_verb=korean_verb)
-#     result = await db.execute(stmt)
+    Returns:
+        UUID: The UUID of the matching row, or None if not found.
+    """
+    # Create a select query
+    stmt = select(KoreanVerbTable.korean_verb_uuid).filter_by(korean_verb=korean_verb)
+    result = await db.execute(stmt)
 
-#     # Fetch the UUID from the result
-#     uuid = result.scalars().first()
+    # Fetch the UUID from the result
+    korean_verb_uuid = result.scalars().first()
+
+    # Retrieve the variance from the uuid
+    stmt2 = select(table_model.korean_verb_variance_negative).filter_by(korean_verb_uuid=korean_verb_uuid)
+    result2 = await db.execute(stmt2)
+
+    return result2.scalars().first()
 
 
 # async def update_row(
