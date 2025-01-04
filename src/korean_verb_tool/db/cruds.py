@@ -7,6 +7,7 @@ from sqlalchemy.ext.declarative import DeclarativeMeta
 
 from korean_verb_tool.config import settings
 from korean_verb_tool.db.base import KoreanVerbTable, KoreanVerbVarianceBaseTable
+from korean_verb_tool.utils.audio import AudioCreator
 
 
 async def create_korean_verb(
@@ -53,9 +54,14 @@ async def create_korean_variance(
         KoreanVerbTable | KoreanVerbVarianceBaseTable: _description_
     """
     try:
+        # Create the audio
+        audio_creator = AudioCreator()
+        mp3filename = audio_creator.create_audio(korean_variance)
+
         # Create a row using the predefined table model
         new_row = table_model(
             korean_verb_variance_negative=korean_variance,
+            audio=str(mp3filename.name),
             verb=relationship_table,
         )
         db.add(new_row)
@@ -92,6 +98,7 @@ async def get_row_by_verb(
     korean_verb_uuid = result.scalars().first()
 
     # Retrieve the variance from the uuid
+    # TODO: Change the column name into a more general way
     stmt2 = select(table_model.korean_verb_variance_negative).filter_by(korean_verb_uuid=korean_verb_uuid)
     result2 = await db.execute(stmt2)
 
