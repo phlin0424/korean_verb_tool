@@ -14,7 +14,7 @@ class AudioCreator:
         self,
         input_text: str,
         path: Path | str = settings.mp3_path,
-    ) -> Path | str:
+    ) -> Path:
         """Create an audio file (.mp3) for the input korean word. Using on Naver TTS API.
 
         Args:
