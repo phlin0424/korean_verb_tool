@@ -31,7 +31,7 @@ class BaseRepository(ABC):
     #     pass
 
 
-class NegativeVerRepository(BaseRepository):
+class NegativeVerbRepository(BaseRepository):
     """Deal with negative form of korean crud."""
 
     def __init__(
