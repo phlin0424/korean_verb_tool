@@ -1,13 +1,13 @@
 import uuid
 from abc import ABC, abstractmethod
 
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
 from korean_verb_tool.config import settings
-from korean_verb_tool.db.base import KoreanVerbTable, KoreanVerbVarianceNegativeTable
+from korean_verb_tool.db.base import KoreanVerbTable, KoreanVerbVarianceBaseTable, KoreanVerbVarianceNegativeTable
 from korean_verb_tool.utils.audio import AudioCreator
 from korean_verb_tool.utils.verb_variance import generate_negative_variance
 
@@ -20,7 +20,7 @@ class BaseRepository(ABC):
         self.main_table = main_table
 
     @abstractmethod
-    async def create() -> None:
+    async def create() -> KoreanVerbVarianceBaseTable:
         pass
 
     @abstractmethod
@@ -28,11 +28,11 @@ class BaseRepository(ABC):
         pass
 
     @abstractmethod
-    async def get():
+    async def get() -> KoreanVerbVarianceBaseTable:
         pass
 
     # @abstractmethod
-    # async def update():
+    # async def update() -> KoreanVerbVarianceBaseTable:
     #     pass
 
     async def create_korean_verb(self, korean_verb: str) -> KoreanVerbTable:
@@ -78,6 +78,26 @@ class BaseRepository(ABC):
             raise ValueError(f"Korean verb '{korean_verb}' does not exist.")
 
         return main_row
+
+    async def delete_row_by_korean_verb(self, korean_verb: str) -> None:
+        """Delete a row by specifying the Korean verb.
+
+        Args:
+            korean_verb (str): The Korean verb to identify the row to delete.
+        """
+        # Create a delete query
+        stmt = delete(self.main_table).where(
+            self.main_table.korean_verb == korean_verb,
+        )
+
+        # Execute the delete query
+        result = await self.db.execute(stmt)
+
+        # Commit the transaction to make the deletion persistent
+        await self.db.commit()
+
+        if result.rowcount == 0:
+            raise ValueError(f"No row found for Korean verb '{korean_verb}'.")
 
 
 class NegativeVerbRepository(BaseRepository):
@@ -147,7 +167,30 @@ class NegativeVerbRepository(BaseRepository):
         )
 
     async def delete(self, korean_verb: str) -> None:
-        pass
+        """Delete neither the verb in the main table nor the verb in the variance table.
+
+        Args:
+            korean_verb (str): _description_
+        """
+        # get the uuid from the main verb table
+        row_main_tale = await self.get_row_by_korean_verb(korean_verb=korean_verb)
+        korean_verb_uuid = row_main_tale.korean_verb_uuid
+
+        # Create a delete query using the uuid
+        stmt = delete(self.variance_table).where(
+            self.variance_table.korean_verb_uuid == korean_verb_uuid,
+        )
+        # Execute the delete query
+        result = await self.db.execute(stmt)
+
+        # Commit the transaction to make the deletion persistent
+        await self.db.commit()
+
+        # Delete the corresponding row in the main table either:
+        await self.delete_row_by_korean_verb(korean_verb)
+
+        if result.rowcount == 0:
+            raise ValueError(f"No row found for Korean verb '{korean_verb}'.")
 
     async def get(self, korean_verb: str) -> KoreanVerbVarianceNegativeTable:
         """Get the corresponding variance row for a giving verb.
