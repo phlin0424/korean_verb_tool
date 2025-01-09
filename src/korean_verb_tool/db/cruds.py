@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
 from korean_verb_tool.config import settings
-from korean_verb_tool.db.base import KoreanVerbTable, KoreanVerbVarianceBaseTable
+from korean_verb_tool.db.base import KoreanVerbTable, KoreanVerbVarianceBaseTable, KoreanVerbVarianceNegativeTable
 from korean_verb_tool.utils.audio import AudioCreator
 from korean_verb_tool.utils.verb_variance import generate_negative_variance
 
@@ -57,12 +57,12 @@ class BaseRepository(ABC):
     async def delete() -> None:
         pass
 
-    # @abstractmethod
-    # async def update():
-    #     pass
+    @abstractmethod
+    async def get():
+        pass
 
     # @abstractmethod
-    # async def get():
+    # async def update():
     #     pass
 
     async def create_korean_verb(self, korean_verb: str) -> KoreanVerbTable:
@@ -98,9 +98,16 @@ class BaseRepository(ABC):
         """
         # Create a select query
         stmt = select(self.main_table).filter_by(korean_verb=korean_verb)
+
+        # Get the row according to the giving verb
         result = await self.db.execute(stmt)
 
-        return result.scalars().first()
+        main_row = result.scalars().first()
+
+        if not main_row:
+            raise ValueError(f"Korean verb '{korean_verb}' does not exist.")
+
+        return main_row
 
 
 class NegativeVerbRepository(BaseRepository):
@@ -171,3 +178,27 @@ class NegativeVerbRepository(BaseRepository):
 
     async def delete(self, korean_verb: str) -> None:
         pass
+
+    async def get(self, korean_verb: str) -> KoreanVerbVarianceNegativeTable:
+        """Get the corresponding variance row for a giving verb.
+
+        Args:
+            korean_verb (str): _description_
+
+        Returns:
+            KoreanVerbVarianceNegativeTable: _description_
+        """
+        # get the uuid from the main verb table
+        row_main_tale = await self.get_row_by_korean_verb(korean_verb=korean_verb)
+        korean_verb_uuid = row_main_tale.korean_verb_uuid
+
+        # get the variance according to the uuid
+        stmt2 = select(
+            self.variance_table,
+        ).filter_by(korean_verb_uuid=korean_verb_uuid)
+        result2 = await self.db.execute(stmt2)
+
+        # Get the variance
+        fetched_row = result2.scalars().first()
+
+        return fetched_row
