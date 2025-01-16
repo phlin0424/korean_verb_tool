@@ -8,8 +8,8 @@ from sqlalchemy.ext.declarative import DeclarativeMeta
 
 from korean_verb_tool.config import settings
 from korean_verb_tool.db.base import KoreanVerbTable, KoreanVerbVarianceBaseTable, KoreanVerbVarianceNegativeTable
-from korean_verb_tool.utils.audio import AudioCreator
 from korean_verb_tool.schemas.vocabulary import Vocabulary
+from korean_verb_tool.utils.audio import AudioCreator
 
 
 class BaseRepository(ABC):
@@ -36,11 +36,11 @@ class BaseRepository(ABC):
     #     pass
 
     async def create_korean_verb(self, korean_voc: Vocabulary) -> KoreanVerbTable:
-        """Inserting rows to KoreanVerbTable.
+        """Inserting rows to KoreanVerbTable by specifying the inserting string.
 
         Args:
             db (AsyncSession): _description_
-            korean_voc (str): _description_
+            korean_voc (Vocabulary): _description_
 
         Returns:
             _type_: _description_
@@ -59,17 +59,17 @@ class BaseRepository(ABC):
         await self.db.refresh(new_verb)
         return new_verb
 
-    async def get_row_by_korean_verb(self, korean_voc: Vocabulary) -> KoreanVerbTable:
-        """Get the row by specifying korean verb.
+    async def get_row_by_korean_verb(self, korean_verb: str) -> KoreanVerbTable:
+        """Get the row by specifying korean verb in string.
 
         Args:
-            korean_voc (Vocabulary): _description_
+            korean_verb (str): _description_
 
         Returns:
             KoreanVerbTable: _description_
         """
         # Create a select query
-        stmt = select(self.main_table).filter_by(korean_verb=korean_voc.origin)
+        stmt = select(self.main_table).filter_by(korean_verb=korean_verb)
 
         # Get the row according to the giving verb
         result = await self.db.execute(stmt)
@@ -77,11 +77,11 @@ class BaseRepository(ABC):
         main_row = result.scalars().first()
 
         if not main_row:
-            raise ValueError(f"Korean verb '{korean_voc.origin}' does not exist.")
+            raise ValueError(f"Korean verb '{korean_verb}' does not exist.")
 
         return main_row
 
-    async def delete_row_by_korean_verb(self, korean_voc: Vocabulary) -> None:
+    async def delete_row_by_korean_verb(self, korean_verb: str) -> None:
         """Delete a row by specifying the Korean verb.
 
         Args:
@@ -89,7 +89,7 @@ class BaseRepository(ABC):
         """
         # Create a delete query
         stmt = delete(self.main_table).where(
-            self.main_table.korean_verb == korean_voc.origin,
+            self.main_table.korean_verb == korean_verb,
         )
 
         # Execute the delete query
@@ -99,7 +99,7 @@ class BaseRepository(ABC):
         await self.db.commit()
 
         if result.rowcount == 0:
-            raise ValueError(f"No row found for Korean verb '{korean_voc.negative}'.")
+            raise ValueError(f"No row found for Korean verb '{korean_verb}'.")
 
 
 class NegativeVerbRepository(BaseRepository):
@@ -154,7 +154,7 @@ class NegativeVerbRepository(BaseRepository):
         """Insert a new korean verb into the main table and generates the corresponding variance and the audios.
 
         Args:
-            korean_verb (str): string
+            korean_voc (Vocabulary): vocabulary model to input.
         """
         # Insert into the main table
         main_row = await self.create_korean_verb(korean_voc=korean_voc)
@@ -165,14 +165,14 @@ class NegativeVerbRepository(BaseRepository):
             relationship_table=main_row,
         )
 
-    async def delete(self, korean_voc: Vocabulary) -> None:
+    async def delete(self, korean_verb: str) -> None:
         """Delete neither the verb in the main table nor the verb in the variance table.
 
         Args:
-            korean_voc (str): _description_
+            korean_verb (str): _description_
         """
         # get the uuid from the main verb table
-        row_main_tale = await self.get_row_by_korean_verb(korean_voc=korean_voc.origin)
+        row_main_tale = await self.get_row_by_korean_verb(korean_verb=korean_verb)
         korean_verb_uuid = row_main_tale.korean_verb_uuid
 
         # Create a delete query using the uuid
@@ -186,22 +186,22 @@ class NegativeVerbRepository(BaseRepository):
         await self.db.commit()
 
         # Delete the corresponding row in the main table either:
-        await self.delete_row_by_korean_verb(korean_voc.origin)
+        await self.delete_row_by_korean_verb(korean_verb)
 
         if result.rowcount == 0:
-            raise ValueError(f"No row found for Korean verb '{korean_voc.origin},{korean_voc.negative}'.")
+            raise ValueError(f"No row found for Korean verb '{korean_verb}'.")
 
-    async def get(self, korean_voc: Vocabulary) -> KoreanVerbVarianceNegativeTable:
-        """Get the corresponding variance row for a giving verb.
+    async def get(self, korean_verb: str) -> KoreanVerbVarianceNegativeTable:
+        """Get the corresponding variance row for a giving verb in string.
 
         Args:
-            korean_verb (str): _description_
+            korean_verb (str): The korean verb in original form.
 
         Returns:
             KoreanVerbVarianceNegativeTable: The returned row of the variance table. which contains the audio path.
         """
         # get the uuid from the main verb table
-        row_main_tale = await self.get_row_by_korean_verb(korean_voc=korean_voc)
+        row_main_tale = await self.get_row_by_korean_verb(korean_verb=korean_verb)
         korean_verb_uuid = row_main_tale.korean_verb_uuid
 
         # get the variance according to the uuid
@@ -212,5 +212,8 @@ class NegativeVerbRepository(BaseRepository):
 
         # Get the variance
         fetched_row = result2.scalars().first()
+
+        if result2.rowcount == 0:
+            raise ValueError(f"No row found for Korean verb '{korean_verb}'.")
 
         return fetched_row

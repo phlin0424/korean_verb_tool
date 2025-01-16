@@ -14,6 +14,8 @@ korean_verb_handler = KoreanVerbHandler(model)
 
 
 class Vocabulary(BaseModel):
+    """A data model when inserting a new row into the db."""
+
     origin: str = Field(default=None, description="Original form")
     negative: str = Field(default=None, description="Negative form of the input verb")
     honorific: str = Field(default=None, description="Honorific form of the input verb")
