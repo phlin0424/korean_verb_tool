@@ -25,8 +25,9 @@ class Vocabulary(BaseModel):
         Returns:
             _type_: _description_
         """
-        origin = self.origin
-        self.negative = asyncio.run(korean_verb_handler.to_negative(origin))
+        if self.negative is None:
+            origin = self.origin
+            self.negative = asyncio.run(korean_verb_handler.to_negative(origin))
         return self
 
 
