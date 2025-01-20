@@ -18,18 +18,22 @@ class BaseRepository(ABC):
     def __init__(self, db: AsyncSession, main_table: type[DeclarativeMeta]) -> None:
         self.db = db
         self.main_table = main_table
+        self.error_msg = "Korean verb '{korean_verb}' does not exist."
 
     @abstractmethod
     async def create() -> KoreanVerbVarianceBaseTable:
-        pass
+        """`create` method to the repository."""
+        return
 
     @abstractmethod
     async def delete() -> None:
-        pass
+        """`delete` method to the repository."""
+        return
 
     @abstractmethod
     async def get() -> KoreanVerbVarianceBaseTable:
-        pass
+        """`get` method to the repository."""
+        return
 
     # @abstractmethod
     # async def update() -> KoreanVerbVarianceBaseTable:
@@ -74,10 +78,12 @@ class BaseRepository(ABC):
         # Get the row according to the giving verb
         result = await self.db.execute(stmt)
 
+        # Extract the first line of the selecting results.
         main_row = result.scalars().first()
 
+        # Create the error message.
         if not main_row:
-            raise ValueError(f"Korean verb '{korean_verb}' does not exist.")
+            raise ValueError(self.error_msg.format(korean_verb=korean_verb))
 
         return main_row
 
@@ -99,7 +105,7 @@ class BaseRepository(ABC):
         await self.db.commit()
 
         if result.rowcount == 0:
-            raise ValueError(f"No row found for Korean verb '{korean_verb}'.")
+            raise ValueError(self.error_msg(korean_verb=korean_verb))
 
 
 class NegativeVerbRepository(BaseRepository):
@@ -189,7 +195,7 @@ class NegativeVerbRepository(BaseRepository):
         await self.delete_row_by_korean_verb(korean_verb)
 
         if result.rowcount == 0:
-            raise ValueError(f"No row found for Korean verb '{korean_verb}'.")
+            raise ValueError(self.error_msg(korean_verb=korean_verb))
 
     async def get(self, korean_verb: str) -> KoreanVerbVarianceNegativeTable:
         """Get the corresponding variance row for a giving verb in string.
@@ -213,7 +219,7 @@ class NegativeVerbRepository(BaseRepository):
         # Get the variance
         fetched_row = result2.scalars().first()
 
-        if result2.rowcount == 0:
-            raise ValueError(f"No row found for Korean verb '{korean_verb}'.")
+        if not fetched_row:
+            raise ValueError(self.error_msg.format(korean_verb=korean_verb))
 
         return fetched_row
