@@ -2,6 +2,7 @@ import uuid
 from abc import ABC, abstractmethod
 
 from sqlalchemy import delete, select
+from sqlalchemy.sql.expression import func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import DeclarativeMeta
@@ -9,6 +10,7 @@ from sqlalchemy.ext.declarative import DeclarativeMeta
 from korean_verb_tool.config import settings
 from korean_verb_tool.db.base import KoreanVerbTable, KoreanVerbVarianceBaseTable, KoreanVerbVarianceNegativeTable
 from korean_verb_tool.schemas.vocabulary import Vocabulary
+from korean_verb_tool.schemas.models import QueryResponse
 from korean_verb_tool.utils.audio import AudioCreator
 
 
@@ -197,7 +199,7 @@ class NegativeVerbRepository(BaseRepository):
         if result.rowcount == 0:
             raise ValueError(self.error_msg(korean_verb=korean_verb))
 
-    async def get(self, korean_verb: str) -> KoreanVerbVarianceNegativeTable:
+    async def get(self, korean_verb: str) -> QueryResponse:
         """Get the corresponding variance row for a giving verb in string.
 
         Args:
@@ -222,4 +224,43 @@ class NegativeVerbRepository(BaseRepository):
         if not fetched_row:
             raise ValueError(self.error_msg.format(korean_verb=korean_verb))
 
-        return fetched_row
+        return QueryResponse(
+            origin=korean_verb,
+            variance=fetched_row.korean_verb_variance_negative,
+            audio=fetched_row.audio,
+        )
+
+    async def get_random_row(self) -> QueryResponse:
+        """Get a random row.
+
+        Args:
+            sel (_type_): _description_
+
+        Returns:
+            KoreanVerbVarianceNegativeTable: _description_
+        """
+        # Get a random row from main table
+        stmt = select(self.main_table).order_by(func.random()).limit(1)
+        result = await self.db.execute(stmt)
+        fetched_row = result.scalars().first()
+
+        # Extract the verb from the query result
+        original_verb = fetched_row.korean_verb
+
+        # Extract the uuid from the query result
+        korean_verb_uuid = fetched_row.korean_verb_uuid
+
+        # Select the variance table using the uuid
+        stmt2 = select(
+            self.variance_table,
+        ).filter_by(korean_verb_uuid=korean_verb_uuid)
+        result2 = await self.db.execute(stmt2)
+
+        # Get the variance
+        fetched_row2 = result2.scalars().first()
+
+        return QueryResponse(
+            origin=original_verb,
+            variance=fetched_row2.korean_verb_variance_negative,
+            audio=fetched_row2.audio,
+        )
