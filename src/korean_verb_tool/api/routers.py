@@ -30,9 +30,38 @@ async def get_negative_forms(
         raise HTTPException(status_code=404, detail=error_msg) from e
 
     # Construct the responses
-
     return NegativeFormResponse(
-        origin=verb_query.origin,
-        negative=result.korean_verb_variance_negative,
+        origin=result.origin,
+        negative=result.variance,
+        audio=result.audio,
+    )
+
+
+@routers.get("/negative_forms_random")
+async def get_negative_forms_random(session: Annotated[AsyncSession, Depends(get_db)]) -> NegativeFormResponse:
+    """Get the negative forms randomly from the existing db.
+
+    Args:
+        session (Annotated[AsyncSession, Depends): _description_
+
+    Returns:
+        NegativeFormResponse: _description_
+    """
+    nr = NegativeVerbRepository(
+        db=session,
+        main_table=KoreanVerbTable,
+        variance_table=KoreanVerbVarianceNegativeTable,
+    )
+
+    try:
+        result = await nr.get_random_row()
+    except ValueError as e:
+        error_msg = f"Korean verb '{result.origin}' not found."
+        raise HTTPException(status_code=404, detail=error_msg) from e
+
+    # Construct the responses
+    return NegativeFormResponse(
+        origin=result.origin,
+        negative=result.variance,
         audio=result.audio,
     )
