@@ -1,16 +1,16 @@
 import uuid
 from abc import ABC, abstractmethod
 
-from sqlalchemy import delete, select
-from sqlalchemy.sql.expression import func
+from sqlalchemy import delete, select, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import DeclarativeMeta
+from sqlalchemy.sql.expression import func
 
 from korean_verb_tool.config import settings
-from korean_verb_tool.db.base import KoreanVerbTable, KoreanVerbVarianceBaseTable, KoreanVerbVarianceNegativeTable
-from korean_verb_tool.schemas.vocabulary import Vocabulary
+from korean_verb_tool.db.base import KoreanVerbTable, KoreanVerbVarianceNegativeTable
 from korean_verb_tool.schemas.models import QueryResponse
+from korean_verb_tool.schemas.vocabulary import Vocabulary
 from korean_verb_tool.utils.audio import AudioCreator
 
 
@@ -23,23 +23,24 @@ class BaseRepository(ABC):
         self.error_msg = "Korean verb '{korean_verb}' does not exist."
 
     @abstractmethod
-    async def create() -> KoreanVerbVarianceBaseTable:
+    async def create() -> QueryResponse:
         """`create` method to the repository."""
         return
 
     @abstractmethod
-    async def delete() -> None:
+    async def delete() -> QueryResponse:
         """`delete` method to the repository."""
         return
 
     @abstractmethod
-    async def get() -> KoreanVerbVarianceBaseTable:
+    async def get() -> QueryResponse:
         """`get` method to the repository."""
         return
 
-    # @abstractmethod
-    # async def update() -> KoreanVerbVarianceBaseTable:
-    #     pass
+    @abstractmethod
+    async def update() -> QueryResponse:
+        """`Update` method to the repository."""
+        return
 
     async def create_korean_verb(self, korean_voc: Vocabulary) -> KoreanVerbTable:
         """Inserting rows to KoreanVerbTable by specifying the inserting string.
@@ -171,6 +172,40 @@ class NegativeVerbRepository(BaseRepository):
         await self.create_korean_variance(
             korean_voc=korean_voc,
             relationship_table=main_row,
+        )
+
+    async def update(self, korean_new_row: KoreanVerbVarianceNegativeTable) -> QueryResponse:
+        """Update the existing row.
+
+        Args:
+            korean_new_row (KoreanVerbVarianceNegativeTable): _description_
+        """
+        # Locate the korean verb user wants to update by fetching the uuid
+        # get the uuid from the main verb table
+        korean_verb_uuid = korean_new_row.korean_verb_uuid
+
+        # Construct the update statement
+        stmt = (
+            update(self.variance_table)
+            .where(self.variance_table.korean_verb_uuid == korean_verb_uuid)
+            .values(
+                audio=korean_new_row.audio,
+                korean_verb_variance_negative=korean_new_row.korean_verb_variance_negative,
+            )
+        )
+        # Execute the update query
+        result = await self.db.execute(stmt)
+
+        # Commit the changes
+        await self.db.commit()
+
+        if result.rowcount == 0:
+            raise ValueError(self.error_msg(korean_verb=korean_new_row.korean_verb_uuid))
+
+        return QueryResponse(
+            origin=korean_new_row.korean_verb_variance_negative,
+            audio=korean_new_row.korean_verb_uuid,
+            variance=korean_new_row.korean_verb_variance_negative,
         )
 
     async def delete(self, korean_verb: str) -> None:
