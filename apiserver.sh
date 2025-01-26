@@ -1,0 +1,1 @@
+uvicorn src.korean_verb_tool.api.app:app --reload
