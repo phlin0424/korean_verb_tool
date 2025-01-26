@@ -9,9 +9,7 @@ from sqlalchemy.sql.expression import func
 
 from korean_verb_tool.config import settings
 from korean_verb_tool.db.base import KoreanVerbTable, KoreanVerbVarianceNegativeTable
-from korean_verb_tool.schemas.models import QueryResponse
-from korean_verb_tool.schemas.vocabulary import Vocabulary
-from korean_verb_tool.utils.audio import AudioCreator
+from korean_verb_tool.schemas.models import PostQuery, QueryResponse
 
 
 class BaseRepository(ABC):
@@ -42,7 +40,7 @@ class BaseRepository(ABC):
         """`Update` method to the repository."""
         return
 
-    async def create_korean_verb(self, korean_voc: Vocabulary) -> KoreanVerbTable:
+    async def create_korean_verb(self, korean_voc: PostQuery) -> KoreanVerbTable:
         """Inserting rows to KoreanVerbTable by specifying the inserting string.
 
         Args:
@@ -126,27 +124,23 @@ class NegativeVerbRepository(BaseRepository):
 
     async def create_korean_variance(
         self,
-        korean_voc: Vocabulary,
+        korean_voc: PostQuery,
         relationship_table: KoreanVerbTable,
-    ) -> KoreanVerbTable:
+    ) -> KoreanVerbVarianceNegativeTable:
         """Generic function to insert a row into a korean variance table.
 
         Args:
-            korean_voc (Vocabulary): _description_
+            korean_voc (PostQuery): _description_
             relationship_table (KoreanVerbTable): The main table row that related to the created variance row.
 
         Returns:
             KoreanVerbTable | KoreanVerbVarianceBaseTable: _description_
         """
         try:
-            # Create the audio
-            audio_creator = AudioCreator()
-            mp3filename = audio_creator.create_audio(korean_voc.negative)
-
             # Create a row using the predefined table model
             new_row = self.variance_table(
-                korean_verb_variance_negative=korean_voc.negative,
-                audio=str(mp3filename.name),
+                korean_verb_variance_negative=korean_voc.variance,
+                audio=korean_voc.audio,
                 verb=relationship_table,
             )
             self.db.add(new_row)
@@ -159,19 +153,24 @@ class NegativeVerbRepository(BaseRepository):
         # Return the created table model, which is row has been inserted.
         return new_row
 
-    async def create(self, korean_voc: Vocabulary) -> None:
+    async def create(self, korean_voc: PostQuery) -> QueryResponse:
         """Insert a new korean verb into the main table and generates the corresponding variance and the audios.
 
         Args:
-            korean_voc (Vocabulary): vocabulary model to input.
+            korean_voc (PostQuery): vocabulary model to input.
         """
         # Insert into the main table
         main_row = await self.create_korean_verb(korean_voc=korean_voc)
 
         # Insert into the variance table
-        await self.create_korean_variance(
+        variance_row = await self.create_korean_variance(
             korean_voc=korean_voc,
             relationship_table=main_row,
+        )
+        return QueryResponse(
+            origin=main_row.korean_verb,
+            audio=variance_row.audio,
+            variance=variance_row.korean_verb_variance_negative,
         )
 
     async def update(self, korean_new_row: KoreanVerbVarianceNegativeTable) -> QueryResponse:
