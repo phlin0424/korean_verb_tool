@@ -7,8 +7,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from korean_verb_tool.schemas.models import InputLang, TranslatedLang
 
-DIR_PATH = Path(__file__).resolve().parent.parent
-MP3_PATH = DIR_PATH / "data"
+DIR_PATH = Path(__file__).resolve().parent
+MP3_PATH = Path(__file__).resolve().parent.parent.parent / "data"
 
 
 class Config(BaseSettings):
@@ -18,7 +18,7 @@ class Config(BaseSettings):
     )
 
     mp3_path: Path = Field(
-        default=DIR_PATH / "data",
+        default=MP3_PATH,
         description="The directory path for the TTS generate audios.",
     )
 
