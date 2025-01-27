@@ -1,1 +1,1 @@
-uv run streamlit run src/streamlit/streamlit.py
+uv run streamlit run src/front/streamlit.py
