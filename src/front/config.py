@@ -4,7 +4,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DIR_PATH = Path(__file__).resolve().parent
-MP3_PATH = Path(__file__).resolve().parent.parent.parent / "data"
+MP3_PATH = Path(__file__).resolve().parent.parent / "data"
 
 
 class Config(BaseSettings):
