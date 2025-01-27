@@ -1,11 +1,11 @@
-from front.config import settings
-
-from fastapi import HTTPException
 import httpx
+from fastapi import HTTPException
+
+from front.config import settings
 
 
 class KoreanVerbNegativeClient:
-    def __init__(self):
+    def __init__(self) -> None:
         self.api_server_url = settings.api_server_url
         self.client = httpx.AsyncClient()
 

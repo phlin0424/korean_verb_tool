@@ -2,8 +2,9 @@ import json
 from pathlib import Path
 
 import streamlit as st
-from front.config import settings
+
 from front.client import KoreanVerbNegativeClient
+from front.config import settings
 
 
 def mp3_player(text: str, mp3_filename: Path) -> None:
@@ -42,7 +43,6 @@ def verbs_player_page() -> None:
 
 def practice_page() -> None:
     """A page for requesting random api endpoint."""
-
     if "action" not in st.session_state:
         st.session_state.action = False
 
